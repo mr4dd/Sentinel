@@ -3,9 +3,18 @@ import subprocess
 #import requests
 import time
 
-class journalctlHandler():
-    def __init__(self):
+class logCollectionHandler():
+    def __init__(self, logType: str):
         self.buffer = []
+        self.logType = logType
+        self.command = []
+        self._setCommand()
+
+    def _setCommand(self):
+        if self.logType == "android":
+            self.command = ["logcat", "-t"]
+        elif self.logType == "gnu":
+            self.command = ["journalctl", "-n"]
 
     def getLogs(self, n: int)-> list[str]:
         try:
@@ -18,7 +27,7 @@ class journalctlHandler():
             print(e)
 
     def _runCommand(self, n: int)->str:
-        journalout = subprocess.run(["journalctl", "-n", f"{n}"], capture_output=True)
+        journalout = subprocess.run([self.command[0], self.command[1], f"{n}"], capture_output=True)
         if journalout.stderr == b'':
             return journalout.stdout.decode("utf-8")
         else:
@@ -39,19 +48,16 @@ class journalctlHandler():
             else:
                 return False
 
-class logcatHandler():
-    pass
-
 def getHandler():
     keys = os.environ.keys()
     if "ANDROID_DIR" in keys:
-        return logcatHandler()
+        return "android"
     else:
-        return journalctlHandler()
+        return "gnu" 
 
 
 def main():
-    handler = getHandler()
+    handler = logCollectionHandler(getHandler())
     while True:
         v = handler.getLogs(200)
         if v:
