@@ -2,6 +2,7 @@ import os
 import subprocess
 #import requests
 import time
+import threading
 
 class logCollectionHandler():
     def __init__(self, logType: str):
@@ -48,6 +49,22 @@ class logCollectionHandler():
             else:
                 return False
 
+class systemMonitor():
+    def __init__(self):
+        pass
+
+    def stat(self):
+        metrics = []
+        processes = os.listdir("/proc/")
+        for process in processes:
+            try:
+                with open(os.path.join("/proc",process, "stat"), "r") as fd:
+                    data = fd.read()
+                    metrics.append(data)
+            except OSError as e:
+                continue
+        return metrics
+
 def getHandler():
     keys = os.environ.keys()
     if "ANDROID_DIR" in keys:
@@ -55,9 +72,10 @@ def getHandler():
     else:
         return "gnu" 
 
-
 def main():
     handler = logCollectionHandler(getHandler())
+    print(systemMonitor().stat())
+    exit()
     while True:
         v = handler.getLogs(200)
         if v:
