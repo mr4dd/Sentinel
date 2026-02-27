@@ -132,7 +132,6 @@ def main():
         systemMonitorThread.start()
         logThread.join()
         systemMonitorThread.join()
-
     except KeyboardInterrupt:
         print("keyboard interrupt recieved, shutting down")
         exit()
