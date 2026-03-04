@@ -88,6 +88,7 @@ class transportHandler():
         self.logEndpoint = log
         self.statEndpoint = stats
         self.pcapEndpoint = pcap
+        self.id = ""
 
     def post(self, data: str, dataType: str):
         endpointMap = {"log":self.logEndpoint, "stat":self.statEndpoint, "pcap": self.pcapEndpoint}
@@ -95,9 +96,13 @@ class transportHandler():
         if not endpoint:
             raise Exception("invalid data type")
         try:
-            requests.post(f'{server}/{endpoint}', json=data)
+            payload = self._buildPayload(data)
+            requests.post(f'{server}/{endpoint}', json=payload)
         except requests.exceptions.RequestException as e:
             self.Backlog.put({dataType:logs})
+
+    def _buildPayload(self, data: str|list[str])->dict:
+        return {"client_id": self.id, "content": data}
 
 
 def getHandlerType():
