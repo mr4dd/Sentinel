@@ -1,2 +1,8 @@
-requests
-scapy
+fastapi==0.135.1
+load-dotenv==0.1.0
+pydantic==2.12.5
+requests==2.32.5
+scylla-driver==3.29.8
+starlette==0.52.1
+uvicorn==0.41.0
+scapy==2.7.0
