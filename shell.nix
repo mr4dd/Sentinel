@@ -4,6 +4,7 @@ let
   python-env = pkgs.python3.withPackages (ps: with ps; [
     requests
     scapy 
+    fastapi
   ]);
 in
 pkgs.mkShell {

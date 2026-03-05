@@ -1,8 +1,11 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles 
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
+
+from util.dbcontroller import database_manager as dbm
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -31,3 +34,6 @@ async def upload_log(log: ClientMetrics):
 @app.post("/network")
 async def upload_log(log: ClientMetrics):
     return {"status": "ok"}
+
+if __name__ == "__main__":
+    uvicorn.run(app)
