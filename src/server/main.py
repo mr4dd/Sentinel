@@ -25,14 +25,28 @@ async def read_index():
 
 @app.post("/logs")
 async def upload_log(log: ClientMetrics):
+    try:
+        dbm.insertData("logs", log.content, log.client_id)
+    except Exception as e:
+        return {"status": "error", "code": e.__str__()}
+
     return {"status": "ok"}
 
 @app.post("/stats")
 async def upload_log(log: ClientMetrics):
+    try:
+        dbm.insertData("stats", log.content, log.client_id)
+    except Exception as e:
+        return {"status": "error", "code": e.__str__()}
     return {"status": "ok"}
 
 @app.post("/network")
 async def upload_log(log: ClientMetrics):
+    try:
+        dbm.insertData("pcap", log.content, log.client_id)
+    except Exception as e:
+        return {"status": "error", "code": e.__str__()}
+    
     return {"status": "ok"}
 
 if __name__ == "__main__":

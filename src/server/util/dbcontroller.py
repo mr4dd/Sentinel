@@ -1,5 +1,5 @@
 from cassandra.cluster import Cluster
-from load_dotenv import load_dotenv
+from dotenv import load_dotenv
 import os
 
 load_dotenv()
@@ -7,13 +7,13 @@ load_dotenv()
 class DatabaseManager:
     def __init__(self, node: str, keyspace: str):
         self.cluster = Cluster([node])
-        self.session = cluster.connect(keyspace)
+        self.session = self.cluster.connect(keyspace)
 
     def fetchData(self, data_type: str)->tuple:
         lookup_stmt = self.session.prepare("SELECT * FROM ?")
         return self.session.execute(lookup_stmt, [data_type])
         
-    def insertData(self, data_type: str, data: dict):
+    def insertData(self, data_type: str, data: dict, client_id: str):
         insert_stmt = self.session.prepare("INSERT INTO ? (client_id, content) VALUES(?, ?)")
         try:
             self.session.execute(insert_stmt, [data_type, data.client_id, data.content])

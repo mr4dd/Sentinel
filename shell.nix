@@ -5,6 +5,9 @@ let
     requests
     scapy 
     fastapi
+    uvicorn
+    cassandra-driver
+    python-dotenv
   ]);
 in
 pkgs.mkShell {
