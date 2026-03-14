@@ -6,6 +6,8 @@ import threading
 from scapy.all import AsyncSniffer, Packet
 import json
 from queue import Queue
+from uuid import uuid1
+import argparse
 
 class logCollectionHandler():
     def __init__(self, logType: str):
@@ -88,7 +90,7 @@ class transportHandler():
         self.logEndpoint = log
         self.statEndpoint = stats
         self.pcapEndpoint = pcap
-        self.id = ""
+        self.id = self.getClientID()
 
     def post(self, data: str, dataType: str):
         endpointMap = {"log":self.logEndpoint, "stat":self.statEndpoint, "pcap": self.pcapEndpoint}
@@ -99,11 +101,32 @@ class transportHandler():
             payload = self._buildPayload(data)
             requests.post(f'{server}/{endpoint}', json=payload)
         except requests.exceptions.RequestException as e:
-            self.Backlog.put({dataType:logs})
+            self.Backlog.put({dataType:data})
 
     def _buildPayload(self, data: str|list[str])->dict:
         return {"client_id": self.id, "content": data}
+    
+    def getClientID(self)->str:
+        config_path = os.path.join(os.getenv("HOME"), ".config")
+        config_file = os.path.join(config_path, "sentinel_client.conf")
+        print(config_file)
+        # check if file exists and if not create itt
+        def _createNewUUID():
+            uuid = uuid1().__str__()
+            with open(config_file, "w") as cfd:
+                cfd.write(f"UUID:{uuid}")
+            return uuid
 
+        if not os.path.exists(config_path):
+            os.makedirs(config_path)
+            return _createNewUUID()
+        elif not os.path.exists(config_file):
+            return _createNewUUID()
+        else:
+            with open(config_file, "r") as cfd:
+                config = cfd.read()
+                uuid = config.split("\n")[0].split(":")[1]
+                return uuid
 
 def getHandlerType():
     keys = os.environ.keys()
@@ -112,14 +135,14 @@ def getHandlerType():
     else:
         return "gnu" 
 
-def collectLogs():
+def collectLogs(transport: transportHandler):
     handler = logCollectionHandler(getHandlerType())
     while True:
         v = handler.getLogs(200)
         if v:
             logsJson = json.dumps(v)
 
-def monitorSystem():
+def monitorSystem(transport: transportHandler):
     monitor = systemMonitor()
     while True:
         s = monitor.stat()
@@ -129,9 +152,10 @@ def monitorSystem():
         if p:
             pcapJson = json.dumps(p)
             
-def main():
-    logThread = threading.Thread(target=collectLogs)
-    systemMonitorThread = threading.Thread(target=monitorSystem)
+def main(remote: str, log: str, stat: str, pcap: str):
+    transport = transportHandler(remote, log, stat, pcap)
+    logThread = threading.Thread(target=collectLogs, args=(transport,))
+    systemMonitorThread = threading.Thread(target=monitorSystem, args=(transport,))
     try:
         logThread.start()
         systemMonitorThread.start()
@@ -143,4 +167,11 @@ def main():
         # i need to gracefully handle shutdown so data already in thread isnt lost and any connections that are active get closed
         
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("remote", help="ip address or domain name of the logging server")
+    parser.add_argument("log", help="the endpoint for the logs")
+    parser.add_argument("stat", help="the endpoint for system metrics")
+    parser.add_argument("pcap", help="the endpoint for network capture")
+    args = parser.parse_args()
+
+    main(args.remote, args.log, args.stat, args.pcap)
