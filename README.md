@@ -1,5 +1,9 @@
 # Sentinel
 
+## ARCHIVAL
+
+Repository archived due to redundancy and poor code quality
+
 ## 1. Purpose
 
 Sentinel was created to address a lack of visibility into what networked devices are doing and what network services they're reaching out to without having to rely on huge software platforms designed for high throughput data ingestion and processing that bring unnecessary complexity into environments that do not require it.
