@@ -9,14 +9,14 @@ class DatabaseManager:
         self.cluster = Cluster([node])
         self.session = self.cluster.connect(keyspace)
 
-    def fetchData(self, data_type: str)->tuple:
-        lookup_stmt = self.session.prepare("SELECT * FROM ?")
-        return self.session.execute(lookup_stmt, [data_type])
+    def fetchData(self, table: str, query: list)->tuple:
+        lookup_stmt = self.session.prepare(f"SELECT * FROM {table}")
+        return self.session.execute(lookup_stmt)
         
     def insertData(self, data_type: str, data: dict, client_id: str):
-        insert_stmt = self.session.prepare("INSERT INTO ? (client_id, content) VALUES(?, ?)")
+        insert_stmt = self.session.prepare(f"INSERT INTO {data_type} (client_id, content) VALUES(?, ?)")
         try:
-            self.session.execute(insert_stmt, [data_type, data.client_id, data.content])
+            self.session.execute(insert_stmt, [data.client_id, data.content])
         except Exception as e:
             print(f"Exception thrown while trying to insert data into database: {str(e)}")
 

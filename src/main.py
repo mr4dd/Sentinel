@@ -99,9 +99,11 @@ class transportHandler():
             raise Exception("invalid data type")
         try:
             payload = self._buildPayload(data)
-            requests.post(f'{server}/{endpoint}', json=payload)
+            response = requests.post(f'{self.server}/{endpoint}', json=payload)
+            print(response.content)
+            time.sleep(1)
         except requests.exceptions.RequestException as e:
-            self.Backlog.put({dataType:data})
+            self.BackLog.put({dataType:data})
 
     def _buildPayload(self, data: str|list[str])->dict:
         return {"client_id": self.id, "content": data}
@@ -109,7 +111,7 @@ class transportHandler():
     def getClientID(self)->str:
         config_path = os.path.join(os.getenv("HOME"), ".config")
         config_file = os.path.join(config_path, "sentinel_client.conf")
-        print(config_file)
+
         # check if file exists and if not create itt
         def _createNewUUID():
             uuid = uuid1().__str__()
@@ -141,6 +143,7 @@ def collectLogs(transport: transportHandler):
         v = handler.getLogs(200)
         if v:
             logsJson = json.dumps(v)
+            transport.post(logsJson, "log")
 
 def monitorSystem(transport: transportHandler):
     monitor = systemMonitor()
@@ -149,8 +152,10 @@ def monitorSystem(transport: transportHandler):
         p = monitor.getPackets()
         if s:
             statJson = json.dumps(s)
+            transport.post(statJson, "stat")
         if p:
             pcapJson = json.dumps(p)
+            transport.post(pcapJson, "pcap")
             
 def main(remote: str, log: str, stat: str, pcap: str):
     transport = transportHandler(remote, log, stat, pcap)
